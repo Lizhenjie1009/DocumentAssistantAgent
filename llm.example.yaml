@@ -1,0 +1,6 @@
+# LLM 配置示例（--generate 模式用，可选）
+# 复制本文件为 llm.yaml 并填入自己的 api_key；本示例文件请勿填写真实 key
+api_key: ""                                # 留空则读环境变量 DEEPSEEK_API_KEY
+base_url: "https://api.deepseek.com"       # 换别的 OpenAI 兼容服务改这里
+model: "deepseek-chat"                     # 或 deepseek-reasoner
+temperature: 0.7

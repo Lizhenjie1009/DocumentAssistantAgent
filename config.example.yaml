@@ -1,0 +1,43 @@
+# docx-formatter 配置示例（所有项均可省略，省略即用内置默认值）
+defaults:
+  numbering: auto            # auto | keep
+  image:
+    max_width_ratio: 1.0
+    enlarge: false
+    center: true
+  toc:
+    levels: [1, 2]
+    placeholder: "00"
+    tab_leader: true
+  table_style: null          # 如 "Table Grid" / "网格型7"；null=原样复制
+  body_start_style: "Heading 1"
+  title:
+    placeholder_regex: '[X×Ｘx]{1,3}分?系统'
+    source: auto             # auto | filename | null
+  match:
+    keywords: []
+    min_similarity: 0.35
+
+# 按模板文件名单独覆盖（文件名需与模板文件夹内一致）
+templates:
+  "测试报告模板.docx":
+    match:
+      keywords: [测试报告, 测试总结, 测试结论]
+  "软件测试报告.docx":
+    match:
+      keywords: [测试报告, 测试总结, 测试结论]
+  "软件设计说明.docx":
+    match:
+      keywords: [软件设计, 设计说明, 体系结构设计]
+  "数据库设计说明模板.docx":
+    match:
+      keywords: [数据库设计, 数据库, 表结构]
+  "系统规格说明.docx":
+    match:
+      keywords: [需求规格, 系统规格, 合格性规定]
+  "软件测试说明.docx":
+    match:
+      keywords: [测试说明, 测试准备, 测试用例]
+  "1-【模板】XX分系统关键技术攻关报告.docx":
+    match:
+      keywords: [技术攻关, 关键技术, 攻关报告]
