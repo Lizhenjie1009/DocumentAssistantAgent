@@ -188,6 +188,52 @@ def _missing_chapters(outline, content):
     return [o for o in outline if (o['level'], normalize_text(o['heading'])) not in have]
 
 
+REVISE_SYSTEM_PROMPT = (
+    '你是专业的军工/软件工程文档撰写助手，负责按用户的修改意见修订一份已生成的文档内容。\n'
+    '要求：\n'
+    '1) 只输出一个 JSON 对象，不要输出任何解释文字或 Markdown 代码块；\n'
+    '2) 章节大纲中每个章节的 level 与 heading 必须全部保留、标题原文照抄，不得增删改标题；\n'
+    '3) 只改写与修改意见相关的章节，其余章节内容尽量原样保留；\n'
+    '4) 输出必须包含全部章节的完整内容（不是只给改动部分）。\n'
+)
+
+
+def build_revise_message(tpl_cfg, outline, prev_content, instruction):
+    parts = [
+        f'文档模板：{tpl_cfg.name}',
+        '章节大纲（必须保持全部章节、标题原文照抄）：',
+        json.dumps(outline, ensure_ascii=False),
+        '当前文档内容 JSON：',
+        json.dumps(prev_content, ensure_ascii=False),
+        '用户的修改意见：\n' + instruction,
+        JSON_SCHEMA_HINT,
+    ]
+    return '\n'.join(parts)
+
+
+def revise_content(tpl_cfg, outline, prev_content, instruction, llm_cfg, retries=2):
+    """Ask the model to revise an existing content dict per a free-text instruction."""
+    user_msg = build_revise_message(tpl_cfg, outline, prev_content, instruction)
+    for attempt in range(retries):
+        text = call_llm([
+            {'role': 'system', 'content': REVISE_SYSTEM_PROMPT},
+            {'role': 'user', 'content': user_msg},
+        ], llm_cfg)
+        content = parse_content_json(text)
+        if content:
+            missing = _missing_chapters(outline, content)
+            if not missing:
+                return content
+            if attempt < retries - 1:
+                names = '、'.join(o['heading'] for o in missing)
+                user_msg += (f'\n\n注意：修订后你漏掉了以下章节，必须全部补齐且标题原文照抄大纲：{names}')
+                continue
+            print(f'[警告] AI 修订后仍漏掉章节：{"、".join(o["heading"] for o in missing)}，已按现有内容继续')
+            return content
+        user_msg += '\n\n注意：你上一次的输出不是合法 JSON，请只输出一个 JSON 对象。'
+    raise RuntimeError('AI 连续返回无法解析的内容，已放弃')
+
+
 def generate_content(tpl_cfg, outline, info, llm_cfg, retries=2):
     user_msg = build_user_message(tpl_cfg, outline, info)
     for attempt in range(retries):

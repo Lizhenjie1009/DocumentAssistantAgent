@@ -106,6 +106,27 @@ python convert.py --generate -t "软件文档模板\软件文档模板" --llm ll
 - 素材要点**留空**时 AI 会写合理占位内容，转换后请人工核对替换。
 - 图片无法由 AI 直接生成，相关位置会写红色占位提示「【此处插入XXX图片】」，转换后自行补图。
 
+## 多轮对话起草 / 修改文档（--chat，issue #1）
+
+`--chat` 对话模式：选模板 → 填标题/素材 → AI 起草初稿后进入循环，**直接输入文字即修改意见**（AI 保留大纲全部章节、只改相关章节），可随时查看/导出：
+
+```bash
+python convert.py --chat -t "软件文档模板\软件文档模板" -o output
+```
+
+会话内可用指令：
+
+| 输入 | 作用 |
+|---|---|
+| 任意修改意见文字 | 让 AI 修订文档（如：第2章补一张表 / 测试结果写详细些） |
+| `/目录` | 查看当前章节结构 |
+| `/导出docx` | 渲染并转成模板格式 Word（写 `output\`），同时记录到运行历史 |
+| `/导出md` | 导出 Markdown（写 `output\`） |
+| `/重来` | 按原需求重新起草 |
+| `/退出` | 结束会话 |
+
+每次会话自动存入 SQLite 的 `chat_sessions` / `chat_messages` 表（与运行历史同一 `--db` 文件）。
+
 ## 运行历史（SQLite）
 
 每次运行 `convert.py` 都会自动把详细信息记录到 SQLite 库（默认 `run_history.db`，可用 `--db` 改位置）：
@@ -131,6 +152,7 @@ formatter/
   report.py              处理报告
   history.py             SQLite 运行历史记录
   generate.py            AI 起草（功能2：问答→结构化JSON→渲染源docx）
+  conversation.py        多轮对话起草/修改（--chat，issue #1）
   util.py                公共工具（样式查找/标题识别/编号剥离）
 ```
 

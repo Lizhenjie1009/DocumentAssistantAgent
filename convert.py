@@ -75,6 +75,8 @@ def main(argv=None):
                     help='查看最近 N 次运行记录后退出（默认 10）')
     ap.add_argument('--generate', action='store_true',
                     help='交互生成模式：问答 → AI 按所选模板大纲起草 → 生成 input 文档 → 自动转换')
+    ap.add_argument('--chat', action='store_true',
+                    help='对话起草模式：多轮对话生成/修改文档，可导出 docx(模板格式)/md（issue #1）')
     ap.add_argument('--llm', default=None, help='LLM 配置文件（可选；api_key 默认读 DEEPSEEK_API_KEY）')
     args = ap.parse_args(argv)
 
@@ -90,8 +92,14 @@ def main(argv=None):
         from formatter.generate import run_generate
         return run_generate(args)
 
+    if args.chat:
+        if not args.templates:
+            ap.error('--chat 需要提供 --templates/-t 模板文件夹')
+        from formatter.conversation import run_chat
+        return run_chat(args)
+
     if not args.input or not args.templates:
-        ap.error('--input/-i 和 --templates/-t 为必填参数（除非使用 --history 或 --generate）')
+        ap.error('--input/-i 和 --templates/-t 为必填参数（除非使用 --history / --generate / --chat）')
 
     configs = load_configs(args.templates, args.config)
     if not configs:
